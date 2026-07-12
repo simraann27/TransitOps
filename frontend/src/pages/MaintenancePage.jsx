@@ -20,6 +20,7 @@ import {
 import MaintenanceFormModal from '../components/MaintenanceFormModal';
 import ConfirmModal from '../components/ConfirmModal';
 import Toast from '../components/Toast';
+import PageBackground from '../components/PageBackground';
 
 // Reusable Counter visual helper
 function Counter({ value }) {
@@ -305,7 +306,8 @@ export default function MaintenancePage() {
   if (!canView) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'left' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'left', position: 'relative' }}>
+      <PageBackground variant="maintenance" />
       
       {/* Toast Notice */}
       <Toast 
@@ -368,15 +370,33 @@ export default function MaintenancePage() {
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
-        gap: '16px'
+        gap: '16px',
+        position: 'relative',
+        zIndex: 1
       }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Maintenance
-          </h1>
-          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-            Track service activity and keep unavailable vehicles out of dispatch.
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            borderRadius: '14px',
+            backgroundColor: 'var(--color-peach-glow)',
+            color: 'var(--color-peach-dark)',
+            boxShadow: '0 8px 20px rgba(244, 63, 94, 0.08)',
+            flexShrink: 0
+          }}>
+            <Wrench size={22} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+              Maintenance
+            </h1>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+              Track service activity and keep unavailable vehicles out of dispatch.
+            </p>
+          </div>
         </div>
 
         {canManage && (

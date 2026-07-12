@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Navigation } from 'lucide-react';
+import { ArrowRight, Navigation, Play } from 'lucide-react';
 import SplitText from './ui/SplitText';
 import BlurText from './ui/BlurText';
 import { motion } from 'framer-motion';
 
-export default function Hero() {
+export default function Hero({ onOpenTour }) {
   const handleScrollToExplore = () => {
     const element = document.getElementById('platform-intro');
     if (element) {
@@ -97,6 +97,22 @@ export default function Hero() {
                 style={{ padding: '16px 32px' }}
               >
                 Explore Platform
+              </button>
+              <button 
+                onClick={onOpenTour} 
+                className="btn btn-secondary" 
+                style={{ 
+                  padding: '16px 32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                  borderColor: 'rgba(59, 130, 246, 0.2)',
+                  color: 'var(--color-blue-dark)'
+                }}
+              >
+                <Play size={18} fill="currentColor" />
+                Watch Product Tour
               </button>
             </div>
           </div>

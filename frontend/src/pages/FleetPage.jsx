@@ -17,6 +17,7 @@ import {
 import VehicleFormModal from '../components/VehicleFormModal';
 import ConfirmModal from '../components/ConfirmModal';
 import Toast from '../components/Toast';
+import PageBackground from '../components/PageBackground';
 
 // Reusable CountUp visual helper
 function Counter({ value }) {
@@ -258,7 +259,8 @@ export default function FleetPage() {
   if (!canView) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'left' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'left', position: 'relative' }}>
+      <PageBackground variant="fleet" />
       
       {/* Toast Notification Container */}
       <Toast 
@@ -304,15 +306,33 @@ export default function FleetPage() {
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
-        gap: '16px'
+        gap: '16px',
+        position: 'relative',
+        zIndex: 1
       }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Fleet Registry
-          </h1>
-          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-            Manage vehicles, capacity, availability and operational status.
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            borderRadius: '14px',
+            backgroundColor: 'var(--color-blue-glow)',
+            color: 'var(--color-blue-dark)',
+            boxShadow: '0 8px 20px rgba(59, 130, 246, 0.08)',
+            flexShrink: 0
+          }}>
+            <Truck size={22} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+              Fleet Registry
+            </h1>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+              Manage vehicles, capacity, availability and operational status.
+            </p>
+          </div>
         </div>
         
         {/* Render create controls only if role possesses managing clearances */}

@@ -14,7 +14,7 @@ import {
 function Counter({ value }) {
   const [count, setCount] = useState(() => {
     const end = parseInt(value, 10);
-    return isNaN(end) ? value : 0;
+    return isNaN(end) ? (value ?? 0) : 0;
   });
 
   useEffect(() => {
@@ -37,12 +37,12 @@ function Counter({ value }) {
     return () => clearInterval(timer);
   }, [value]);
 
-  return <span>{count}</span>;
+  return <span>{count ?? 0}</span>;
 }
 
 // Reusable custom SVG Donut Chart
-function SVGDonutChart({ data, title }) {
-  const total = data.reduce((sum, item) => sum + (item.value || 0), 0);
+function SVGDonutChart({ data = [], title = "" }) {
+  const total = (data || []).reduce((sum, item) => sum + ((item && item.value) || 0), 0);
   const circumference = 2 * Math.PI * 40; // radius = 40, circumference ≈ 251.3
   
   if (total === 0) {
@@ -54,13 +54,13 @@ function SVGDonutChart({ data, title }) {
     );
   }
 
-  const segments = data.map((item, idx) => {
-    if (item.value === 0) return null;
+  // Pre-calculate offsets purely without reassigning render variables
+  const segments = (data || []).map((item, idx) => {
+    if (!item || !item.value) return null;
     const percent = item.value / total;
     const strokeLength = percent * circumference;
 
-    // Calculate offset purely without reassigning external variables
-    const precedingPercent = data.slice(0, idx).reduce((sum, prevItem) => sum + (prevItem.value / total), 0);
+    const precedingPercent = data.slice(0, idx).reduce((sum, prevItem) => sum + (((prevItem && prevItem.value) || 0) / total), 0);
     const strokeOffset = circumference - strokeLength - (precedingPercent * circumference);
 
     return {
@@ -81,7 +81,7 @@ function SVGDonutChart({ data, title }) {
             cy="60"
             r="40"
             fill="transparent"
-            stroke={item.color}
+            stroke={item.color || 'var(--border-light)'}
             strokeWidth="16"
             strokeDasharray={`${item.strokeLength} ${circumference}`}
             strokeDashoffset={item.strokeOffset}
@@ -97,12 +97,13 @@ function SVGDonutChart({ data, title }) {
         <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-light)', marginBottom: '4px', textTransform: 'uppercase' }}>
           {title}
         </h4>
-        {data.map((item, idx) => {
+        {(data || []).map((item, idx) => {
+          if (!item) return null;
           const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
           return (
             <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              <div style={{ width: '12px', height: '12px', borderRadius: '4px', backgroundColor: item.color }} />
-              <span>{item.name}: <strong>{item.value}</strong> ({percent}%)</span>
+              <div style={{ width: '12px', height: '12px', borderRadius: '4px', backgroundColor: item.color || 'var(--border-light)' }} />
+              <span>{item.name || 'N/A'}: <strong>{item.value || 0}</strong> ({percent}%)</span>
             </div>
           );
         })}
@@ -112,8 +113,17 @@ function SVGDonutChart({ data, title }) {
 }
 
 // Reusable custom SVG Bar Chart
-function SVGBarChart({ data, yLabel }) {
-  const maxVal = Math.max(...data.map(item => item.value), 1);
+function SVGBarChart({ data = [], yLabel = "" }) {
+  if (!data || data.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', color: 'var(--text-light)', fontSize: '0.88rem' }}>
+        <Activity size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
+        No data available
+      </div>
+    );
+  }
+
+  const maxVal = Math.max(...data.map(item => (item && item.value) || 0), 1);
   const chartHeight = 150;
   const barWidth = 32;
   const spacing = 16;
@@ -136,7 +146,8 @@ function SVGBarChart({ data, yLabel }) {
 
         {/* Vertical bars */}
         {data.map((item, idx) => {
-          const barHeight = (item.value / maxVal) * chartHeight;
+          if (!item) return null;
+          const barHeight = (((item.value || 0) / maxVal) * chartHeight);
           const x = idx * (barWidth + spacing) + 40;
           const y = chartHeight - barHeight + 20;
 
@@ -150,7 +161,7 @@ function SVGBarChart({ data, yLabel }) {
                 style={{ fontSize: '0.75rem', fill: 'var(--text-primary)', fontWeight: 700, opacity: 0 }}
                 id={`bar-tooltip-${idx}`}
               >
-                {item.value} {yLabel}
+                {item.value || 0} {yLabel}
               </text>
               
               <rect
@@ -159,7 +170,7 @@ function SVGBarChart({ data, yLabel }) {
                 width={barWidth}
                 height={Math.max(barHeight, 4)}
                 rx="6"
-                fill={item.color}
+                fill={item.color || 'var(--color-blue-dark)'}
                 style={{ transition: 'all 0.2s', cursor: 'pointer' }}
                 onMouseEnter={(e) => {
                   e.target.setAttribute('fill', 'var(--color-blue-dark)');
@@ -167,7 +178,7 @@ function SVGBarChart({ data, yLabel }) {
                   if (tooltip) tooltip.style.opacity = '1';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.setAttribute('fill', item.color);
+                  e.target.setAttribute('fill', item.color || 'var(--color-blue-dark)');
                   const tooltip = document.getElementById(`bar-tooltip-${idx}`);
                   if (tooltip) tooltip.style.opacity = '0';
                 }}
@@ -180,7 +191,7 @@ function SVGBarChart({ data, yLabel }) {
                 textAnchor="middle"
                 style={{ fontSize: '0.72rem', fill: 'var(--text-secondary)', fontWeight: 600 }}
               >
-                {item.name}
+                {item.name || 'N/A'}
               </text>
             </g>
           );
@@ -242,22 +253,22 @@ export default function AnalyticsPage() {
       );
 
       // Map resolved datasets
-      if (results[0].status === 'fulfilled') setVehicles(results[0].value.vehicles || []);
+      if (results[0].status === 'fulfilled') setVehicles(results[0].value?.vehicles || []);
       else setPartialError(true);
 
-      if (results[1].status === 'fulfilled') setDrivers(results[1].value.drivers || []);
+      if (results[1].status === 'fulfilled') setDrivers(results[1].value?.drivers || []);
       else setPartialError(true);
 
-      if (results[2].status === 'fulfilled') setTrips(results[2].value.trips || []);
+      if (results[2].status === 'fulfilled') setTrips(results[2].value?.trips || []);
       else setPartialError(true);
 
-      if (results[3].status === 'fulfilled') setMaintenance(results[3].value.records || []);
+      if (results[3].status === 'fulfilled') setMaintenance(results[3].value?.records || []);
       else setPartialError(true);
 
-      if (results[4].status === 'fulfilled') setFuel(results[4].value.records || []);
+      if (results[4].status === 'fulfilled') setFuel(results[4].value?.records || []);
       else setPartialError(true);
 
-      if (results[5].status === 'fulfilled') setExpenses(results[5].value.expenses || []);
+      if (results[5].status === 'fulfilled') setExpenses(results[5].value?.expenses || []);
       else setPartialError(true);
 
       setSyncTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
@@ -283,11 +294,12 @@ export default function AnalyticsPage() {
 
   // Format Helper Indian Rupee
   const formatIndianCurrency = (amount) => {
+    const numericAmt = Number(amount) || 0;
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(numericAmt);
   };
 
   // ----------------------------------------------------
@@ -295,71 +307,72 @@ export default function AnalyticsPage() {
   // ----------------------------------------------------
   
   // 1. Fleet Utilization
-  const activeVehicles = vehicles.filter(v => v.status === "On Trip").length;
-  const nonRetiredVehicles = vehicles.filter(v => v.status !== "Retired").length;
+  const activeVehicles = (vehicles || []).filter(v => v && v.status === "On Trip").length;
+  const nonRetiredVehicles = (vehicles || []).filter(v => v && v.status !== "Retired").length;
   const fleetUtilization = nonRetiredVehicles > 0 ? Math.round((activeVehicles / nonRetiredVehicles) * 100) : 0;
 
   // 2. Total Costs
-  const fuelCostSum = fuel.reduce((sum, r) => sum + (r.cost || 0), 0);
-  const generalExpenseCostSum = expenses.reduce((sum, r) => sum + (r.amount || 0), 0);
-  const maintenanceCostSum = maintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
+  const fuelCostSum = (fuel || []).reduce((sum, r) => sum + ((r && r.cost) || 0), 0);
+  const generalExpenseCostSum = (expenses || []).reduce((sum, r) => sum + ((r && r.amount) || 0), 0);
+  const maintenanceCostSum = (maintenance || []).reduce((sum, r) => sum + ((r && r.cost) || 0), 0);
   const totalOperationalCost = fuelCostSum + generalExpenseCostSum + maintenanceCostSum;
 
   // 3. Trip Completion Rate
-  const completedTrips = trips.filter(t => t.status === "Completed").length;
-  const nonCancelledTrips = trips.filter(t => t.status !== "Cancelled").length;
+  const completedTrips = (trips || []).filter(t => t && t.status === "Completed").length;
+  const nonCancelledTrips = (trips || []).filter(t => t && t.status !== "Cancelled").length;
   const tripCompletionRate = nonCancelledTrips > 0 ? Math.round((completedTrips / nonCancelledTrips) * 100) : 0;
 
   // 4. Average Driver Safety Score
-  const totalDrivers = drivers.length;
-  const safetySum = drivers.reduce((sum, d) => sum + (d.safetyScore || 0), 0);
+  const totalDrivers = drivers?.length || 0;
+  const safetySum = (drivers || []).reduce((sum, d) => sum + ((d && d.safetyScore) || 0), 0);
   const avgSafetyScore = totalDrivers > 0 ? Math.round(safetySum / totalDrivers) : 0;
 
   // 5. Fuel Consumed
-  const fuelLitersSum = fuel.reduce((sum, r) => sum + (r.liters || 0), 0);
+  const fuelLitersSum = (fuel || []).reduce((sum, r) => sum + ((r && r.liters) || 0), 0);
 
   // 6. Active Operations
-  const activeOpsCount = trips.filter(t => t.status === "Dispatched" || t.status === "On Trip").length;
+  const activeOpsCount = (trips || []).filter(t => t && (t.status === "Dispatched" || t.status === "On Trip")).length;
 
   // ----------------------------------------------------
   // FLEET ANALYTICS
   // ----------------------------------------------------
   const fleetStatusData = [
-    { name: "Available", value: vehicles.filter(v => v.status === "Available").length, color: "var(--color-mint-dark)" },
-    { name: "On Trip", value: vehicles.filter(v => v.status === "On Trip").length, color: "var(--color-blue-dark)" },
-    { name: "In Shop", value: vehicles.filter(v => v.status === "In Shop").length, color: "var(--color-yellow-dark)" },
-    { name: "Retired", value: vehicles.filter(v => v.status === "Retired").length, color: "var(--text-light)" }
+    { name: "Available", value: (vehicles || []).filter(v => v && v.status === "Available").length, color: "var(--color-mint-dark)" },
+    { name: "On Trip", value: (vehicles || []).filter(v => v && v.status === "On Trip").length, color: "var(--color-blue-dark)" },
+    { name: "In Shop", value: (vehicles || []).filter(v => v && v.status === "In Shop").length, color: "var(--color-yellow-dark)" },
+    { name: "Retired", value: (vehicles || []).filter(v => v && v.status === "Retired").length, color: "var(--text-light)" }
   ];
 
-  const totalFleetCount = vehicles.length;
-  const operationalFleetCount = vehicles.filter(v => v.status === "Available" || v.status === "On Trip").length;
-  const unavailableFleetCount = vehicles.filter(v => v.status === "In Shop" || v.status === "Retired").length;
+  const totalFleetCount = vehicles?.length || 0;
+  const operationalFleetCount = (vehicles || []).filter(v => v && (v.status === "Available" || v.status === "On Trip")).length;
+  const unavailableFleetCount = (vehicles || []).filter(v => v && (v.status === "In Shop" || v.status === "Retired")).length;
 
   // ----------------------------------------------------
   // TRIP PERFORMANCE
   // ----------------------------------------------------
   const tripLifecycleData = [
-    { name: "Draft", value: trips.filter(t => t.status === "Draft").length, color: "var(--color-lavender-dark)" },
-    { name: "Dispatched", value: trips.filter(t => t.status === "Dispatched").length, color: "var(--color-yellow-dark)" },
-    { name: "On Trip", value: trips.filter(t => t.status === "On Trip").length, color: "var(--color-blue-dark)" },
-    { name: "Completed", value: trips.filter(t => t.status === "Completed").length, color: "var(--color-mint-dark)" },
-    { name: "Cancelled", value: trips.filter(t => t.status === "Cancelled").length, color: "#ef4444" }
+    { name: "Draft", value: (trips || []).filter(t => t && t.status === "Draft").length, color: "var(--color-lavender-dark)" },
+    { name: "Dispatched", value: (trips || []).filter(t => t && t.status === "Dispatched").length, color: "var(--color-yellow-dark)" },
+    { name: "On Trip", value: (trips || []).filter(t => t && t.status === "On Trip").length, color: "var(--color-blue-dark)" },
+    { name: "Completed", value: (trips || []).filter(t => t && t.status === "Completed").length, color: "var(--color-mint-dark)" },
+    { name: "Cancelled", value: (trips || []).filter(t => t && t.status === "Cancelled").length, color: "#ef4444" }
   ];
 
   // ----------------------------------------------------
   // COST BREAKDOWN CONTRIBUTION
   // ----------------------------------------------------
   const costBreakdownData = [
-    { name: "Fuel", value: fuelCostSum, color: "var(--color-blue-dark)" },
-    { name: "Maintenance", value: maintenanceCostSum, color: "var(--color-yellow-dark)" },
-    { name: "Other Expenses", value: generalExpenseCostSum, color: "var(--color-mint-dark)" }
+    { name: "Fuel", value: fuelCostSum || 0, color: "var(--color-blue-dark)" },
+    { name: "Maintenance", value: maintenanceCostSum || 0, color: "var(--color-yellow-dark)" },
+    { name: "Other Expenses", value: generalExpenseCostSum || 0, color: "var(--color-mint-dark)" }
   ];
 
   // ----------------------------------------------------
   // VEHICLE-WISE FUEL CONSUMPTION GROUPING
   // ----------------------------------------------------
   const vehicleFuelMap = {};
-  fuel.forEach(r => {
+  (fuel || []).forEach(r => {
+    if (!r) return;
     const vName = r.vehicle?.name || 'Unknown';
     vehicleFuelMap[vName] = (vehicleFuelMap[vName] || 0) + (r.liters || 0);
   });
@@ -372,44 +385,55 @@ export default function AnalyticsPage() {
   // ----------------------------------------------------
   // DRIVER SAFETY INSIGHTS
   // ----------------------------------------------------
-  const sortedDrivers = [...drivers].sort((a, b) => b.safetyScore - a.safetyScore).slice(0, 4);
+  const sortedDrivers = [...(drivers || [])]
+    .filter(Boolean)
+    .sort((a, b) => ((b.safetyScore || 0) - (a.safetyScore || 0)))
+    .slice(0, 4);
   
-  const excellentDriversCount = drivers.filter(d => d.safetyScore >= 90).length;
-  const attentionRequiredCount = drivers.filter(d => d.safetyScore < 75).length;
+  const excellentDriversCount = (drivers || []).filter(d => d && d.safetyScore >= 90).length;
+  const attentionRequiredCount = (drivers || []).filter(d => d && d.safetyScore < 75).length;
   
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const expiredLicensesCount = drivers.filter(d => new Date(d.licenseExpiryDate) < today).length;
+  const expiredLicensesCount = (drivers || []).filter(d => d && d.licenseExpiryDate && new Date(d.licenseExpiryDate) < today).length;
 
   // ----------------------------------------------------
   // VEHICLE COST-TO-ACQUISITION RATIO
   // ----------------------------------------------------
-  const vehicleInsights = vehicles.map(v => {
+  const vehicleInsights = (vehicles || []).map(v => {
+    if (!v) return null;
+    
     // 1. Fuel associated
-    const vFuelCost = fuel.filter(f => f.vehicle?._id === v._id || f.vehicle === v._id).reduce((sum, r) => sum + r.cost, 0);
+    const vFuelCost = (fuel || [])
+      .filter(f => f && (f.vehicle?._id === v._id || f.vehicle === v._id))
+      .reduce((sum, r) => sum + ((r && r.cost) || 0), 0);
     // 2. Maintenance associated
-    const vMaintCost = maintenance.filter(m => m.vehicle?._id === v._id || m.vehicle === v._id).reduce((sum, r) => sum + r.cost, 0);
+    const vMaintCost = (maintenance || [])
+      .filter(m => m && (m.vehicle?._id === v._id || m.vehicle === v._id))
+      .reduce((sum, r) => sum + ((r && r.cost) || 0), 0);
     // 3. Other Expenses associated
-    const vExpCost = expenses.filter(e => e.vehicle?._id === v._id || e.vehicle === v._id).reduce((sum, r) => sum + r.amount, 0);
+    const vExpCost = (expenses || [])
+      .filter(e => e && (e.vehicle?._id === v._id || e.vehicle === v._id))
+      .reduce((sum, r) => sum + ((r && r.amount) || 0), 0);
 
     const totalOperatingCost = vFuelCost + vMaintCost + vExpCost;
     const ratio = v.acquisitionCost > 0 ? ((totalOperatingCost / v.acquisitionCost) * 100) : 0;
 
     return {
-      name: v.name,
-      registration: v.registrationNumber,
-      acquisitionCost: v.acquisitionCost,
-      operatingCost: totalOperatingCost,
-      ratio
+      name: v.name || 'Unknown',
+      registration: v.registrationNumber || 'N/A',
+      acquisitionCost: v.acquisitionCost || 0,
+      operatingCost: totalOperatingCost || 0,
+      ratio: ratio || 0
     };
-  }).sort((a, b) => b.ratio - a.ratio).slice(0, 5); // display top 5 vehicles by ratio
+  }).filter(Boolean).sort((a, b) => (b.ratio || 0) - (a.ratio || 0)).slice(0, 5); // display top 5 vehicles by ratio
 
   // ----------------------------------------------------
   // RULE-BASED INSIGHT PANEL GENERATION
   // ----------------------------------------------------
   const getRuleBasedInsights = () => {
     const alerts = [];
-    const inShopCount = vehicles.filter(v => v.status === "In Shop").length;
+    const inShopCount = (vehicles || []).filter(v => v && v.status === "In Shop").length;
 
     if (inShopCount > 0) {
       alerts.push({
@@ -428,9 +452,9 @@ export default function AnalyticsPage() {
     if (fleetUtilization > 80) {
       alerts.push({
         type: 'warning',
-        text: `Fleet utilization is high at ${fleetUtilization}%. Capacity planning may be required.`
+        text: `Keep fleet capacity in mind. Fleet utilization is high at ${fleetUtilization}%.`
       });
-    } else if (fleetUtilization < 30 && vehicles.length > 0) {
+    } else if (fleetUtilization < 30 && (vehicles || []).length > 0) {
       alerts.push({
         type: 'info',
         text: `Fleet utilization is currently low at ${fleetUtilization}%.`
@@ -710,22 +734,23 @@ export default function AnalyticsPage() {
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
                 {sortedDrivers.map((driver, idx) => {
-                  const isEx = driver.safetyScore >= 90;
+                  if (!driver) return null;
+                  const isEx = (driver.safetyScore || 0) >= 90;
                   return (
                     <div key={driver._id || idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
                         <span>
-                          <strong>{driver.name}</strong> • {driver.licenseCategory}
+                          <strong>{driver.name || 'Unknown'}</strong> • {driver.licenseCategory || 'N/A'}
                         </span>
                         <span style={{ fontWeight: 700, color: isEx ? 'var(--color-mint-dark)' : 'var(--text-secondary)' }}>
-                          {driver.safetyScore}/100 ({driver.status})
+                          {driver.safetyScore || 0}/100 ({driver.status || 'Offline'})
                         </span>
                       </div>
                       
                       {/* Safety progress visual lines */}
                       <div style={{ width: '100%', height: '6px', backgroundColor: 'var(--bg-cream)', borderRadius: '3px', overflow: 'hidden' }}>
                         <div style={{
-                          width: `${driver.safetyScore}%`,
+                          width: `${driver.safetyScore || 0}%`,
                           height: '100%',
                           backgroundColor: isEx ? 'var(--color-mint-dark)' : 'var(--color-blue-dark)',
                           borderRadius: '3px'

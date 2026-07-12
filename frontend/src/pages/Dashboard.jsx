@@ -8,9 +8,11 @@ import {
   Activity, 
   AlertTriangle,
   RefreshCw, 
-  TrendingUp 
+  TrendingUp,
+  LayoutDashboard
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import PageBackground from '../components/PageBackground';
 
 // Reusable CountUp visual helper
 function Counter({ value, suffix = "" }) {
@@ -47,46 +49,74 @@ export default function Dashboard() {
   const { user } = useAuth();
   
   const [vehicles, setVehicles] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [trips, setTrips] = useState([]);
   const [apiLoading, setApiLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
 
   // Load backend API URL with fallback
   const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-  const fetchVehicles = useCallback(async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/vehicles`);
-      if (!response.ok) {
-        throw new Error(`Sync failure: Server responded with status ${response.status}`);
-      }
-      const data = await response.json();
-      if (data.success) {
-        setVehicles(data.vehicles || []);
-        setApiError(null);
+      const endpoints = [
+        `${apiBaseUrl}/api/vehicles`,
+        `${apiBaseUrl}/api/drivers`,
+        `${apiBaseUrl}/api/trips`
+      ];
+
+      const results = await Promise.allSettled(
+        endpoints.map(url => fetch(url).then(async res => {
+          if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+          return res.json();
+        }))
+      );
+
+      let errors = [];
+
+      if (results[0].status === 'fulfilled') {
+        setVehicles(results[0].value?.vehicles || []);
       } else {
-        throw new Error(data.message || "Unknown API response structure");
+        errors.push("Fleet");
+      }
+
+      if (results[1].status === 'fulfilled') {
+        setDrivers(results[1].value?.drivers || []);
+      } else {
+        errors.push("Drivers");
+      }
+
+      if (results[2].status === 'fulfilled') {
+        setTrips(results[2].value?.trips || []);
+      } else {
+        errors.push("Trips");
+      }
+
+      if (errors.length > 0) {
+        setApiError(`Data sync incomplete. Missing: ${errors.join(', ')}.`);
+      } else {
+        setApiError(null);
       }
     } catch (error) {
-      console.error("Failed to sync live vehicle registry data:", error);
+      console.error("Failed to sync live dashboard data:", error);
       setApiError(error.message || "Failed to establish a live connection to the backend server.");
     } finally {
       setApiLoading(false);
     }
   }, [apiBaseUrl]);
 
-  // Initial mount fetch. apiLoading is initialized to true, apiError to null,
-  // so no state updates are triggered synchronously inside the effect lifecycle.
+  // Initial mount fetch.
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchVehicles();
+      fetchDashboardData();
     }, 0);
     return () => clearTimeout(timer);
-  }, [fetchVehicles]);
+  }, [fetchDashboardData]);
 
   const handleManualSync = () => {
     setApiLoading(true);
     setApiError(null);
-    fetchVehicles();
+    fetchDashboardData();
   };
 
   // Operational metrics calculated from API data
@@ -97,18 +127,28 @@ export default function Dashboard() {
   const maintenanceVehiclesCount = vehicles.filter(v => v.status === "In Shop").length;
   const retiredVehiclesCount = vehicles.filter(v => v.status === "Retired").length;
 
+  const activeTripsCount = trips.filter(t => t && t.status === "On Trip").length;
+  const pendingTripsCount = trips.filter(t => t && (t.status === "Draft" || t.status === "Dispatched")).length;
+  const driversOnDutyCount = drivers.filter(d => d && d.status !== "Offline").length;
+
   // Fleet Utilization Calculation: On Trip / Total Non-Retired * 100
   const fleetUtilization = nonRetiredVehicles.length > 0 
     ? Math.round((activeVehiclesCount / nonRetiredVehicles.length) * 100)
     : 0;
 
-  // Mock data for Recent Trips (as Trips API is not created yet)
-  const recentTrips = [
-    { id: "TRIP-2041", vehicle: "VAN-05", driver: "Alex Mercer", status: "On Trip", eta: "1.5 hrs" },
-    { id: "TRIP-2040", vehicle: "TRK-12", driver: "Sophia Chen", status: "Completed", eta: "Delivered" },
-    { id: "TRIP-2039", vehicle: "VAN-08", driver: "Marcus Aurelius", status: "Dispatched", eta: "3.2 hrs" },
-    { id: "TRIP-2038", vehicle: "TRK-09", driver: "Elena Rostova", status: "Draft", eta: "Scheduled" }
-  ];
+  // Map real trips to display layout
+  const recentTrips = (trips || []).slice(0, 5).map(t => {
+    const vName = t.vehicle?.name || t.vehicle?.registrationNumber || (vehicles.find(v => v._id === t.vehicle)?.name) || 'Unknown';
+    const dName = t.driver?.name || (drivers.find(d => d._id === t.driver)?.name) || 'Unknown';
+    
+    return {
+      id: t.tripId || 'N/A',
+      vehicle: vName,
+      driver: dName,
+      status: t.status || 'Draft',
+      eta: t.status === "Completed" ? "Delivered" : (t.status === "On Trip" ? "In Transit" : (t.status === "Cancelled" ? "Cancelled" : "Scheduled"))
+    };
+  });
 
   // Map trip statuses to pastel classes
   const getStatusStyle = (status) => {
@@ -146,17 +186,34 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'left' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'left', position: 'relative' }}>
+      <PageBackground variant="dashboard" />
       
       {/* Header Block */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Control Center Dashboard
-          </h1>
-          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-            Welcome back, {user?.name} • Operational role: <strong>{user?.role}</strong>
-          </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            borderRadius: '14px',
+            backgroundColor: 'var(--color-blue-glow)',
+            color: 'var(--color-blue-dark)',
+            boxShadow: '0 8px 20px rgba(59, 130, 246, 0.08)',
+            flexShrink: 0
+          }}>
+            <LayoutDashboard size={22} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+              Control Center Dashboard
+            </h1>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+              Welcome back, {user?.name} • Operational role: <strong>{user?.role}</strong>
+            </p>
+          </div>
         </div>
         <button 
           onClick={handleManualSync} 
@@ -270,7 +327,7 @@ export default function Dashboard() {
             </span>
           </div>
           <div className="kpi-value">
-            <Counter value={18} />
+            {apiLoading ? '...' : <Counter value={activeTripsCount} />}
           </div>
           <span className="kpi-trend">En route dispatch</span>
         </motion.div>
@@ -284,7 +341,7 @@ export default function Dashboard() {
             </span>
           </div>
           <div className="kpi-value">
-            <Counter value={4} />
+            {apiLoading ? '...' : <Counter value={pendingTripsCount} />}
           </div>
           <span className="kpi-trend">Awaiting driver manifest</span>
         </motion.div>
@@ -298,7 +355,7 @@ export default function Dashboard() {
             </span>
           </div>
           <div className="kpi-value">
-            <Counter value={22} />
+            {apiLoading ? '...' : <Counter value={driversOnDutyCount} />}
           </div>
           <span className="kpi-trend">Credentials verified</span>
         </motion.div>
@@ -354,25 +411,33 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {recentTrips.map((trip, idx) => (
-                <tr key={idx} style={{ borderBottom: idx < recentTrips.length - 1 ? '1px solid var(--bg-cream)' : 'none' }}>
-                  <td style={{ padding: '14px 10px', fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{trip.id}</td>
-                  <td style={{ padding: '14px 10px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{trip.vehicle}</td>
-                  <td style={{ padding: '14px 10px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{trip.driver}</td>
-                  <td style={{ padding: '14px 10px' }}>
-                    <span style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      padding: '4px 10px',
-                      borderRadius: '8px',
-                      ...getStatusStyle(trip.status)
-                    }}>
-                      {trip.status}
-                    </span>
+              {recentTrips.length > 0 ? (
+                recentTrips.map((trip, idx) => (
+                  <tr key={idx} style={{ borderBottom: idx < recentTrips.length - 1 ? '1px solid var(--bg-cream)' : 'none' }}>
+                    <td style={{ padding: '14px 10px', fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>{trip.id}</td>
+                    <td style={{ padding: '14px 10px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{trip.vehicle}</td>
+                    <td style={{ padding: '14px 10px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{trip.driver}</td>
+                    <td style={{ padding: '14px 10px' }}>
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        padding: '4px 10px',
+                        borderRadius: '8px',
+                        ...getStatusStyle(trip.status)
+                      }}>
+                        {trip.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 10px', fontSize: '0.88rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{trip.eta}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{ padding: '24px 10px', textTransform: 'none', color: 'var(--text-light)', textAlign: 'center', fontSize: '0.88rem' }}>
+                    No dispatched trips registered in control center.
                   </td>
-                  <td style={{ padding: '14px 10px', fontSize: '0.88rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{trip.eta}</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </motion.div>

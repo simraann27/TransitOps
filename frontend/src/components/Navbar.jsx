@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Navigation, Menu, X } from 'lucide-react';
 
-export default function Navbar() {
+export default function Navbar({ onOpenTour }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -110,6 +110,14 @@ export default function Navbar() {
           >
             Analytics
           </span>
+          <span 
+            onClick={onOpenTour} 
+            style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }}
+            onMouseEnter={(e) => e.target.style.color = 'var(--text-primary)'}
+            onMouseLeave={(e) => e.target.style.color = 'var(--text-secondary)'}
+          >
+            Product Tour
+          </span>
         </div>
 
         {/* CTA Buttons */}
@@ -191,6 +199,12 @@ export default function Navbar() {
             style={{ padding: '8px 0', fontWeight: 500, color: 'var(--text-primary)', cursor: 'pointer' }}
           >
             Analytics
+          </span>
+          <span 
+            onClick={() => { setMobileMenuOpen(false); onOpenTour(); }} 
+            style={{ padding: '8px 0', fontWeight: 500, color: 'var(--text-primary)', cursor: 'pointer' }}
+          >
+            Product Tour
           </span>
           <hr style={{ border: 'none', borderTop: '1px solid var(--border-light)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

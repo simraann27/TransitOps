@@ -18,6 +18,36 @@ import {
   User
 } from 'lucide-react';
 
+const getRoleAccentStyle = (role) => {
+  switch (role) {
+    case "Fleet Manager":
+      return {
+        background: 'radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.06) 0%, transparent 60%)',
+        borderTop: '4px solid var(--color-blue-dark)'
+      };
+    case "Dispatcher":
+      return {
+        background: 'radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.06) 0%, transparent 60%)',
+        borderTop: '4px solid var(--color-lavender-dark)'
+      };
+    case "Safety Officer":
+      return {
+        background: 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.06) 0%, transparent 60%)',
+        borderTop: '4px solid var(--color-mint-dark)'
+      };
+    case "Financial Analyst":
+      return {
+        background: 'radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.05) 0%, transparent 60%)',
+        borderTop: '4px solid var(--color-yellow-dark)'
+      };
+    default:
+      return {
+        background: 'none',
+        borderTop: 'none'
+      };
+  }
+};
+
 export default function AppShell({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -323,8 +353,20 @@ export default function AppShell({ children }) {
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        minWidth: 0 // Prevents grid overflow issues
+        minWidth: 0, // Prevents grid overflow issues
+        position: 'relative'
       }}>
+        {/* Subtle Role-Based Top Ambient Accent */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '240px',
+          pointerEvents: 'none',
+          zIndex: 0,
+          ...getRoleAccentStyle(user?.role)
+        }} />
         
         {/* TOP NAVIGATION BAR */}
         <header style={{
