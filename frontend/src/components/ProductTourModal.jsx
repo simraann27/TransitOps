@@ -131,7 +131,7 @@ export default function ProductTourModal({ isOpen, onClose }) {
               {!videoError ? (
                 <video
                   ref={videoRef}
-                  src="/videos/transitops-tour.mp4"
+                  src="https://1drv.ms/v/c/5b2f135f08e32784/IQCmfqeqEBQqQ4A_RRIcUVE-Adr-FXUN_eb9xcVnA-nsPQI?e=PfWh0r"
                   controls
                   autoPlay
                   muted
@@ -158,30 +158,52 @@ export default function ProductTourModal({ isOpen, onClose }) {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '12px',
+                  gap: '16px',
                   backgroundColor: 'var(--bg-cream)',
                   color: 'var(--text-secondary)',
+                  padding: '24px',
+                  textAlign: 'center'
                 }}>
                   <div style={{
-                    width: '56px',
-                    height: '56px',
+                    width: '64px',
+                    height: '64px',
                     borderRadius: '50%',
                     backgroundColor: 'rgba(59, 130, 246, 0.08)',
                     color: 'var(--color-blue-dark)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 2px 10px rgba(59, 130, 246, 0.05)',
+                    boxShadow: '0 4px 14px rgba(59, 130, 246, 0.1)',
                   }}>
-                    <Play size={24} fill="currentColor" />
+                    <Play size={28} fill="currentColor" style={{ marginLeft: '4px' }} />
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                  <div>
+                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '6px' }}>
                       TransitOps Product Tour
                     </h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-light)', fontWeight: 500 }}>
-                      Demo video ready to be added
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', maxWidth: '420px', margin: '0 auto 20px auto', lineHeight: '1.5' }}>
+                      To view the full high-quality interactive demo walkthrough, please click the button below to watch the tour hosted on OneDrive.
                     </p>
+                    <a
+                      href="https://1drv.ms/v/c/5b2f135f08e32784/IQCmfqeqEBQqQ4A_RRIcUVE-Adr-FXUN_eb9xcVnA-nsPQI?e=PfWh0r"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-primary"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '12px 28px',
+                        fontSize: '0.88rem',
+                        textDecoration: 'none',
+                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)',
+                        borderRadius: '10px',
+                        fontWeight: 600
+                      }}
+                    >
+                      <Play size={16} fill="currentColor" />
+                      Watch Full Product Tour
+                    </a>
                   </div>
                 </div>
               )}
