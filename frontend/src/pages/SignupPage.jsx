@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
 
-export default function LoginPage() {
-  const { login, loginWithGoogle, isAuthenticated } = useAuth();
+export default function SignupPage() {
+  const { register, loginWithGoogle, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -16,7 +16,7 @@ export default function LoginPage() {
       await loginWithGoogle(credentialResponse.credential);
       navigate('/dashboard');
     } catch (err) {
-      setBackendError(err.message || 'Google authentication failed');
+      setBackendError(err.message || 'Google registration failed');
     } finally {
       setIsSubmitting(false);
     }
@@ -34,16 +34,20 @@ export default function LoginPage() {
   }, [isAuthenticated, navigate]);
 
   // Form State
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [backendError, setBackendError] = useState('');
 
   // Field Validation Errors State
   const [errors, setErrors] = useState({
+    name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,7 +58,15 @@ export default function LoginPage() {
     return re.test(emailStr);
   };
 
-  // Input Change Handlers that clear errors when user corrects the values
+  // Change Handlers
+  const handleNameChange = (e) => {
+    const val = e.target.value;
+    setName(val);
+    if (errors.name && val.trim() !== '') {
+      setErrors(prev => ({ ...prev, name: '' }));
+    }
+  };
+
   const handleEmailChange = (e) => {
     const val = e.target.value;
     setEmail(val);
@@ -81,13 +93,30 @@ export default function LoginPage() {
     }
   };
 
+  const handleConfirmPasswordChange = (e) => {
+    const val = e.target.value;
+    setConfirmPassword(val);
+    if (errors.confirmPassword) {
+      if (val === password) {
+        setErrors(prev => ({ ...prev, confirmPassword: '' }));
+      } else {
+        setErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setBackendError('');
-    
+
     // Perform strict validation checks
     let hasValidationError = false;
-    const newErrors = { email: '', password: '' };
+    const newErrors = { name: '', email: '', password: '', confirmPassword: '' };
+
+    if (name.trim() === '') {
+      newErrors.name = 'Full Name is required';
+      hasValidationError = true;
+    }
 
     if (email.trim() === '') {
       newErrors.email = 'Email address is required';
@@ -105,6 +134,11 @@ export default function LoginPage() {
       hasValidationError = true;
     }
 
+    if (confirmPassword !== password) {
+      newErrors.confirmPassword = 'Passwords do not match';
+      hasValidationError = true;
+    }
+
     setErrors(newErrors);
 
     if (hasValidationError) {
@@ -113,10 +147,10 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
     try {
-      await login(email, password);
+      await register(name, email, password);
       navigate('/dashboard');
     } catch (err) {
-      setBackendError(err.message || 'Invalid email or password');
+      setBackendError(err.message || 'Registration failed');
     } finally {
       setIsSubmitting(false);
     }
@@ -227,8 +261,8 @@ export default function LoginPage() {
             color: 'var(--text-primary)',
             marginBottom: '20px'
           }}>
-            Every operation.<br />
-            <span className="highlight-blue">One command center.</span>
+            Create your<br />
+            <span className="highlight-blue">TransitOps Account</span>
           </h2>
           <p style={{
             fontSize: '1.05rem',
@@ -236,7 +270,7 @@ export default function LoginPage() {
             color: 'var(--text-secondary)',
             maxWidth: '460px'
           }}>
-            Coordinate ready vehicles, verified operators, active dispatches, and real-time fuel/maintenance logs under a single dashboard with server-enforced safety compliance.
+            Begin managing your vehicles, operators, trips and maintenance logs under a secure server-enforced platform.
           </p>
         </div>
 
@@ -246,7 +280,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* RIGHT SIDE: Login form panel */}
+      {/* RIGHT SIDE: Signup form panel */}
       <div className="login-form-panel" style={{
         flex: 1,
         display: 'flex',
@@ -258,7 +292,7 @@ export default function LoginPage() {
         <div style={{ maxWidth: '420px', width: '100%', margin: '0 auto', textAlign: 'left' }}>
           
           {/* Header */}
-          <div style={{ marginBottom: '32px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <h1 style={{
               fontSize: '2.25rem',
               fontFamily: 'var(--font-heading)',
@@ -266,10 +300,10 @@ export default function LoginPage() {
               color: 'var(--text-primary)',
               marginBottom: '8px'
             }}>
-              Welcome back
+              Register Account
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-              Sign in to access your TransitOps command center.
+              Sign up to get access to the dashboard environment.
             </p>
           </div>
 
@@ -291,7 +325,7 @@ export default function LoginPage() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  marginBottom: '24px'
+                  marginBottom: '20px'
                 }}
               >
                 <AlertCircle size={16} />
@@ -301,15 +335,46 @@ export default function LoginPage() {
           </AnimatePresence>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
+            {/* Field: Full Name */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Full Name
+              </label>
+              <div className="input-group" style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '12px', left: '14px', color: 'var(--text-light)' }}>
+                  <User size={18} />
+                </div>
+                <input 
+                  type="text" 
+                  value={name}
+                  onChange={handleNameChange}
+                  placeholder="John Doe"
+                  className={errors.name ? 'input-error' : ''}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px 10px 42px',
+                    borderRadius: '10px',
+                    border: errors.name ? '1.5px solid #f87171' : '1px solid var(--border-light)',
+                    backgroundColor: errors.name ? '#fef2f2' : 'var(--bg-warm-white)',
+                    fontSize: '0.9rem',
+                    color: 'var(--text-primary)',
+                    outline: 'none',
+                    transition: 'all 0.3s'
+                  }}
+                />
+              </div>
+              {errors.name && <div style={{ fontSize: '0.75rem', color: '#b91c1c', marginTop: '2px' }}>{errors.name}</div>}
+            </div>
+
             {/* Field: Email */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                 Email Address
               </label>
               <div className="input-group" style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '14px', left: '14px', color: 'var(--text-light)' }}>
+                <div style={{ position: 'absolute', top: '12px', left: '14px', color: 'var(--text-light)' }}>
                   <Mail size={18} />
                 </div>
                 <input 
@@ -320,50 +385,27 @@ export default function LoginPage() {
                   className={errors.email ? 'input-error' : ''}
                   style={{
                     width: '100%',
-                    padding: '12px 14px 12px 42px',
-                    borderRadius: '12px',
+                    padding: '10px 14px 10px 42px',
+                    borderRadius: '10px',
                     border: errors.email ? '1.5px solid #f87171' : '1px solid var(--border-light)',
                     backgroundColor: errors.email ? '#fef2f2' : 'var(--bg-warm-white)',
-                    fontSize: '0.92rem',
+                    fontSize: '0.9rem',
                     color: 'var(--text-primary)',
                     outline: 'none',
                     transition: 'all 0.3s'
                   }}
                 />
               </div>
-              <AnimatePresence>
-                {errors.email && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '0.78rem',
-                      color: '#b91c1c',
-                      backgroundColor: '#fef2f2',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      marginTop: '4px',
-                      fontWeight: 500
-                    }}
-                  >
-                    <AlertCircle size={14} />
-                    {errors.email}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {errors.email && <div style={{ fontSize: '0.75rem', color: '#b91c1c', marginTop: '2px' }}>{errors.email}</div>}
             </div>
 
             {/* Field: Password */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                 Password
               </label>
               <div className="input-group" style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '14px', left: '14px', color: 'var(--text-light)' }}>
+                <div style={{ position: 'absolute', top: '12px', left: '14px', color: 'var(--text-light)' }}>
                   <Lock size={18} />
                 </div>
                 <input 
@@ -374,11 +416,11 @@ export default function LoginPage() {
                   className={errors.password ? 'input-error' : ''}
                   style={{
                     width: '100%',
-                    padding: '12px 40px 12px 42px',
-                    borderRadius: '12px',
+                    padding: '10px 40px 10px 42px',
+                    borderRadius: '10px',
                     border: errors.password ? '1.5px solid #f87171' : '1px solid var(--border-light)',
                     backgroundColor: errors.password ? '#fef2f2' : 'var(--bg-warm-white)',
-                    fontSize: '0.92rem',
+                    fontSize: '0.9rem',
                     color: 'var(--text-primary)',
                     outline: 'none',
                     transition: 'all 0.3s'
@@ -389,7 +431,7 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
                     position: 'absolute',
-                    top: '14px',
+                    top: '12px',
                     right: '14px',
                     border: 'none',
                     background: 'none',
@@ -403,54 +445,73 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <AnimatePresence>
-                {errors.password && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '0.78rem',
-                      color: '#b91c1c',
-                      backgroundColor: '#fef2f2',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      marginTop: '4px',
-                      fontWeight: 500
-                    }}
-                  >
-                    <AlertCircle size={14} />
-                    {errors.password}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {errors.password && <div style={{ fontSize: '0.75rem', color: '#b91c1c', marginTop: '2px' }}>{errors.password}</div>}
             </div>
 
-            {/* Extra checks row */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              fontSize: '0.85rem',
-              marginTop: '4px'
-            }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+            {/* Field: Confirm Password */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Confirm Password
+              </label>
+              <div className="input-group" style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '12px', left: '14px', color: 'var(--text-light)' }}>
+                  <Lock size={18} />
+                </div>
                 <input 
-                  type="checkbox" 
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={handleConfirmPasswordChange}
+                  placeholder="••••••••"
+                  className={errors.confirmPassword ? 'input-error' : ''}
                   style={{
-                    width: '16px',
-                    height: '16px',
-                    accentColor: 'var(--color-blue-dark)',
-                    cursor: 'pointer'
+                    width: '100%',
+                    padding: '10px 40px 10px 42px',
+                    borderRadius: '10px',
+                    border: errors.confirmPassword ? '1.5px solid #f87171' : '1px solid var(--border-light)',
+                    backgroundColor: errors.confirmPassword ? '#fef2f2' : 'var(--bg-warm-white)',
+                    fontSize: '0.9rem',
+                    color: 'var(--text-primary)',
+                    outline: 'none',
+                    transition: 'all 0.3s'
                   }}
                 />
-                Remember me
-              </label>
+                <button 
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '14px',
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-light)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 0
+                  }}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.confirmPassword && <div style={{ fontSize: '0.75rem', color: '#b91c1c', marginTop: '2px' }}>{errors.confirmPassword}</div>}
+            </div>
+
+            {/* Info Message */}
+            <div style={{
+              backgroundColor: 'var(--color-blue-glow)',
+              border: '1px solid rgba(59, 130, 246, 0.1)',
+              borderRadius: '10px',
+              padding: '10px 12px',
+              fontSize: '0.8rem',
+              color: 'var(--color-blue-dark)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginTop: '4px'
+            }}>
+              <Info size={14} style={{ flexShrink: 0 }} />
+              <span>New accounts start with Dispatcher access.</span>
             </div>
 
             {/* Button */}
@@ -459,9 +520,9 @@ export default function LoginPage() {
               className="btn btn-primary"
               disabled={isSubmitting}
               style={{
-                padding: '14px',
-                borderRadius: '12px',
-                fontSize: '0.95rem',
+                padding: '12px',
+                borderRadius: '10px',
+                fontSize: '0.92rem',
                 marginTop: '10px',
                 width: '100%',
                 position: 'relative'
@@ -477,12 +538,12 @@ export default function LoginPage() {
                   animation: 'spin 0.8s infinite linear',
                   margin: '0 auto'
                 }} />
-              ) : "Sign In"}
+              ) : "Create Account"}
             </button>
           </form>
 
           {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0', color: 'var(--text-light)', fontSize: '0.8rem', fontWeight: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', color: 'var(--text-light)', fontSize: '0.8rem', fontWeight: 600 }}>
             <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-light)' }} />
             <span style={{ padding: '0 12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>or</span>
             <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-light)' }} />
@@ -500,11 +561,11 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Link to Signup */}
-          <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-            Don't have an account?{' '}
-            <Link to="/signup" style={{ color: 'var(--color-blue-dark)', fontWeight: 600, textDecoration: 'none' }}>
-              Create account
+          {/* Link to Login */}
+          <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: 'var(--color-blue-dark)', fontWeight: 600, textDecoration: 'none' }}>
+              Sign In
             </Link>
           </div>
 
@@ -512,14 +573,12 @@ export default function LoginPage() {
       </div>
 
       <style>{`
-        /* Focus styles for inputs */
         .input-group input:focus {
           border-color: var(--color-blue-dark) !important;
           box-shadow: 0 0 0 4px var(--color-blue-glow) !important;
           background-color: #ffffff !important;
         }
 
-        /* Responsive controls */
         @media (max-width: 992px) {
           .login-brand-panel {
             display: none !important;

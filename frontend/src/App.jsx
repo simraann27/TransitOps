@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 import Dashboard from './pages/Dashboard';
 import FleetPage from './pages/FleetPage';
 import DriversPage from './pages/DriversPage';
@@ -12,6 +13,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import AppShell from './components/AppShell';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -44,86 +46,91 @@ class ErrorBoundary extends React.Component {
 }
 
 export default function App() {
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'placeholder-client-id';
+
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <AppShell>
-                  <Dashboard />
-                </AppShell>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/fleet" 
-            element={
-              <ProtectedRoute>
-                <AppShell>
-                  <FleetPage />
-                </AppShell>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/drivers" 
-            element={
-              <ProtectedRoute>
-                <AppShell>
-                  <DriversPage />
-                </AppShell>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/trips" 
-            element={
-              <ProtectedRoute>
-                <AppShell>
-                  <TripsPage />
-                </AppShell>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/maintenance" 
-            element={
-              <ProtectedRoute>
-                <AppShell>
-                  <MaintenancePage />
-                </AppShell>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/fuel-expenses" 
-            element={
-              <ProtectedRoute>
-                <AppShell>
-                  <FuelExpensesPage />
-                </AppShell>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/analytics" 
-            element={
-              <ProtectedRoute>
-                <AppShell>
-                  <ErrorBoundary>
-                    <AnalyticsPage />
-                  </ErrorBoundary>
-                </AppShell>
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <Dashboard />
+                  </AppShell>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/fleet" 
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <FleetPage />
+                  </AppShell>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/drivers" 
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <DriversPage />
+                  </AppShell>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/trips" 
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <TripsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/maintenance" 
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <MaintenancePage />
+                  </AppShell>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/fuel-expenses" 
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <FuelExpensesPage />
+                  </AppShell>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/analytics" 
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <ErrorBoundary>
+                      <AnalyticsPage />
+                    </ErrorBoundary>
+                  </AppShell>
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }

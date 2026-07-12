@@ -1,62 +1,177 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export function AuthProvider({ children }) {
-  // Use lazy state initialization to avoid useEffect setState triggers
-  const [user, setUser] = useState(() => {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(() => {
     try {
-      const storedUser = localStorage.getItem('transitops_user');
-      return storedUser ? JSON.parse(storedUser) : null;
-    } catch (error) {
-      console.error("Failed to read stored user:", error);
+      return localStorage.getItem('transitops_token');
+    } catch {
       return null;
     }
   });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    try {
-      return !!localStorage.getItem('transitops_user');
-    } catch {
-      return false;
+  // Validate persisted token on mount
+  useEffect(() => {
+    async function validatePersistedToken() {
+      const storedToken = localStorage.getItem('transitops_token');
+      if (!storedToken) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${storedToken}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.user) {
+            setUser(data.user);
+            setToken(storedToken);
+            setIsAuthenticated(true);
+            // Sync user details to local storage user cache
+            localStorage.setItem('transitops_user', JSON.stringify(data.user));
+          } else {
+            // Token invalid or expired
+            localStorage.removeItem('transitops_token');
+            localStorage.removeItem('transitops_user');
+          }
+        } else {
+          // Token invalid or expired
+          localStorage.removeItem('transitops_token');
+          localStorage.removeItem('transitops_user');
+        }
+      } catch (err) {
+        console.error("Token verification failed:", err);
+        // On connection errors, do not immediately kick out if user is cached locally
+        // to maintain offline resiliency of dashboards
+        const cachedUser = localStorage.getItem('transitops_user');
+        if (cachedUser) {
+          try {
+            setUser(JSON.parse(cachedUser));
+            setIsAuthenticated(true);
+          } catch {
+            localStorage.removeItem('transitops_token');
+            localStorage.removeItem('transitops_user');
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
     }
-  });
 
-  const [loading] = useState(false);
+    validatePersistedToken();
+  }, []);
 
-  const login = (email, password, role) => {
-    // Demo authentication: Accept any valid email and password >= 6 characters
-    // Store user as "Simran Tupe" with entered email and selected role
-    const demoUser = {
-      name: "Simran Tupe",
-      email: email.trim(),
-      role: role
-    };
+  const login = async (email, password) => {
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
 
-    localStorage.setItem('transitops_user', JSON.stringify(demoUser));
-    setUser(demoUser);
-    setIsAuthenticated(true);
-    return { success: true };
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      localStorage.setItem('transitops_token', data.token);
+      localStorage.setItem('transitops_user', JSON.stringify(data.user));
+      setUser(data.user);
+      setToken(data.token);
+      setIsAuthenticated(true);
+      return { success: true };
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
+  };
+
+  const register = async (name, email, password) => {
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      localStorage.setItem('transitops_token', data.token);
+      localStorage.setItem('transitops_user', JSON.stringify(data.user));
+      setUser(data.user);
+      setToken(data.token);
+      setIsAuthenticated(true);
+      return { success: true };
+    } catch (error) {
+      console.error("Registration error:", error);
+      throw error;
+    }
   };
 
   const logout = () => {
+    localStorage.removeItem('transitops_token');
     localStorage.removeItem('transitops_user');
     setUser(null);
+    setToken(null);
     setIsAuthenticated(false);
+  };
+
+  const loginWithGoogle = async (credential) => {
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential })
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Google Sign-In failed');
+      }
+
+      localStorage.setItem('transitops_token', data.token);
+      localStorage.setItem('transitops_user', JSON.stringify(data.user));
+      setUser(data.user);
+      setToken(data.token);
+      setIsAuthenticated(true);
+      return { success: true };
+    } catch (error) {
+      console.error("Google Login error:", error);
+      throw error;
+    }
   };
 
   const value = {
     user,
+    token,
     isAuthenticated,
     loading,
     login,
+    register,
+    loginWithGoogle,
     logout
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 }
