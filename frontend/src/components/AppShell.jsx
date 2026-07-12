@@ -11,7 +11,6 @@ import {
   Wrench, 
   Receipt, 
   BarChart3, 
-  Settings as SettingsIcon,
   Search,
   LogOut,
   Menu,
@@ -79,12 +78,6 @@ export default function AppShell({ children }) {
       icon: BarChart3, 
       path: "/analytics", 
       permission: "analytics" 
-    },
-    { 
-      name: "Settings", 
-      icon: SettingsIcon, 
-      path: "/settings",
-      roleLimit: "Fleet Manager" // Visible only to Fleet Manager
     }
   ];
 

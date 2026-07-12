@@ -155,7 +155,7 @@ export default function Dashboard() {
             Control Center Dashboard
           </h1>
           <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-            Welcome back, {user?.name} • Operational role: **{user?.role}**
+            Welcome back, {user?.name} • Operational role: <strong>{user?.role}</strong>
           </p>
         </div>
         <button 

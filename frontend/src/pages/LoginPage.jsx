@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Navigation, Mail, Lock, Shield, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Navigation, Mail, Lock, Shield, Eye, EyeOff, AlertCircle, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LoginPage() {
@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [role, setRole] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showDemoResetInfo, setShowDemoResetInfo] = useState(false);
 
   // Field Validation Errors State
   const [errors, setErrors] = useState({
@@ -509,11 +510,36 @@ export default function LoginPage() {
               </label>
               <span 
                 style={{ color: 'var(--color-blue-dark)', fontWeight: 600, cursor: 'pointer' }}
-                onClick={() => alert("Demo Password Reset: Any password of 6+ characters will grant access.")}
+                onClick={() => setShowDemoResetInfo(!showDemoResetInfo)}
               >
                 Forgot password?
               </span>
             </div>
+
+            <AnimatePresence>
+              {showDemoResetInfo && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  style={{
+                    backgroundColor: 'var(--bg-cream)',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    fontSize: '0.82rem',
+                    color: 'var(--text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  <Info size={16} style={{ color: 'var(--color-blue-dark)', flexShrink: 0 }} />
+                  <span>Demo Password Reset: Any password of 6+ characters will grant access.</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Button */}
             <button 
