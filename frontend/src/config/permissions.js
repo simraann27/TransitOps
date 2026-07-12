@@ -1,0 +1,60 @@
+export const ROLES = {
+  FLEET_MANAGER: "Fleet Manager",
+  DISPATCHER: "Dispatcher",
+  SAFETY_OFFICER: "Safety Officer",
+  FINANCIAL_ANALYST: "Financial Analyst"
+};
+
+export const PERMISSIONS = {
+  VIEW_DASHBOARD: "dashboard",
+  FLEET_VIEW: "fleet:view",
+  FLEET_MANAGE: "fleet",
+  DRIVERS_VIEW: "drivers:view",
+  DRIVERS_MANAGE: "drivers",
+  TRIPS_VIEW: "trips:view",
+  TRIPS_MANAGE: "trips",
+  MAINTENANCE_VIEW: "maintenance:view",
+  MAINTENANCE_MANAGE: "maintenance",
+  FUEL_EXPENSES: "fuel-expenses",
+  ANALYTICS: "analytics"
+};
+
+// Map roles to their permissions
+export const ROLE_PERMISSIONS = {
+  [ROLES.FLEET_MANAGER]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.FLEET_MANAGE,
+    PERMISSIONS.FLEET_VIEW,
+    PERMISSIONS.DRIVERS_MANAGE,
+    PERMISSIONS.DRIVERS_VIEW,
+    PERMISSIONS.MAINTENANCE_MANAGE,
+    PERMISSIONS.MAINTENANCE_VIEW,
+    PERMISSIONS.ANALYTICS
+  ],
+  [ROLES.DISPATCHER]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.FLEET_VIEW,
+    PERMISSIONS.TRIPS_MANAGE,
+    PERMISSIONS.TRIPS_VIEW
+  ],
+  [ROLES.SAFETY_OFFICER]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.DRIVERS_MANAGE,
+    PERMISSIONS.DRIVERS_VIEW,
+    PERMISSIONS.MAINTENANCE_MANAGE,
+    PERMISSIONS.MAINTENANCE_VIEW,
+    PERMISSIONS.TRIPS_VIEW
+  ],
+  [ROLES.FINANCIAL_ANALYST]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.FLEET_VIEW,
+    PERMISSIONS.FUEL_EXPENSES,
+    PERMISSIONS.ANALYTICS
+  ]
+};
+
+export function hasPermission(userRole, permission) {
+  if (!userRole) return false;
+  const permissions = ROLE_PERMISSIONS[userRole] || [];
+  return permissions.includes(permission);
+}
