@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Navigation, Mail, Lock, Shield, Eye, EyeOff, AlertCircle, Info } from 'lucide-react';
+import { Mail, Lock, Shield, Eye, EyeOff, AlertCircle, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LoginPage() {
@@ -210,18 +210,11 @@ export default function LoginPage() {
             fontFamily: 'var(--font-heading)',
             color: 'var(--text-primary)'
           }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '32px',
-              height: '32px',
-              borderRadius: '10px',
-              backgroundColor: 'var(--color-blue)',
-              color: 'var(--text-primary)',
-            }}>
-              <Navigation size={18} style={{ transform: 'rotate(45deg)' }} />
-            </div>
+            <img 
+              src="/transitops-logo.svg" 
+              alt="TransitOps Logo" 
+              style={{ width: '32px', height: '32px', objectFit: 'contain' }} 
+            />
             <span>Transit<span style={{ color: 'var(--color-lavender-dark)' }}>Ops</span></span>
           </Link>
           <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginTop: '4px' }}>

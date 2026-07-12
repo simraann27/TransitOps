@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Info
 } from 'lucide-react';
+import PageBackground from '../components/PageBackground';
 
 // Reusable Counter helper
 function Counter({ value }) {
@@ -491,7 +492,8 @@ export default function AnalyticsPage() {
   if (!canView) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'left' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'left', position: 'relative' }}>
+      <PageBackground variant="analytics" />
       
       {/* Header bar */}
       <div style={{
@@ -499,20 +501,38 @@ export default function AnalyticsPage() {
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
-        gap: '16px'
+        gap: '16px',
+        position: 'relative',
+        zIndex: 1
       }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Analytics & Insights
-          </h1>
-          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-            Understand fleet performance, operational costs and transport efficiency.
-          </p>
-          {syncTime && (
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-light)', fontWeight: 600 }}>
-              Last synced: {syncTime}
-            </span>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            borderRadius: '14px',
+            backgroundColor: 'var(--color-blue-glow)',
+            color: 'var(--color-blue-dark)',
+            boxShadow: '0 8px 20px rgba(59, 130, 246, 0.08)',
+            flexShrink: 0
+          }}>
+            <Activity size={22} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+              Analytics & Insights
+            </h1>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+              Understand fleet performance, operational costs and transport efficiency.
+            </p>
+            {syncTime && (
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-light)', fontWeight: 600 }}>
+                Last synced: {syncTime}
+              </span>
+            )}
+          </div>
         </div>
 
         <button 

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="t-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B2430" />
+      <stop offset="100%" stop-color="#2D3748" />
+    </linearGradient>
+    <linearGradient id="route-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+  </defs>
+  <!-- Stylized T Horizontal Bar -->
+  <path d="M22 20 H78 C81.3 20 83.5 23.5 82 26.5 L80 30.5 C79 32.5 77 34 74.8 34 H25.2 C23 34 21 32.5 20 30.5 L18 26.5 C16.5 23.5 18.7 20 22 20 Z" fill="url(#t-grad)" />
+  
+  <!-- Curved Route sweeping from center of T downwards and rightwards -->
+  <path d="M50 32 C50 55, 30 75, 70 75" stroke="url(#route-grad)" stroke-width="12" stroke-linecap="round" fill="none" />
+  
+  <!-- Dash overlay for route coordination indicator -->
+  <path d="M50 38 C50 55, 30 75, 70 75" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 6" fill="none" opacity="0.6" />
+
+  <!-- Node 1 (Origin node on the route stem) -->
+  <circle cx="48" cy="52" r="5" fill="#A78BFA" stroke="#ffffff" stroke-width="1.5" />
+
+  <!-- Node 2 (Destination node at the end of route) -->
+  <circle cx="70" cy="75" r="7.5" fill="#10B981" stroke="#ffffff" stroke-width="2" />
+</svg>

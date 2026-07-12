@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Navigation, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 export default function Navbar({ onOpenTour }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -57,18 +57,11 @@ export default function Navbar({ onOpenTour }) {
           fontFamily: 'var(--font-heading)',
           color: 'var(--text-primary)'
         }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '32px',
-            height: '32px',
-            borderRadius: '10px',
-            backgroundColor: 'var(--color-blue)',
-            color: 'var(--text-primary)',
-          }}>
-            <Navigation size={18} style={{ transform: 'rotate(45deg)' }} />
-          </div>
+          <img 
+            src="/transitops-logo.svg" 
+            alt="TransitOps Logo" 
+            style={{ width: '32px', height: '32px', objectFit: 'contain' }} 
+          />
           <span>Transit<span style={{ color: 'var(--color-lavender-dark)' }}>Ops</span></span>
         </Link>
 

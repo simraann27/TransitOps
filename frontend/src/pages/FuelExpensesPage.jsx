@@ -22,6 +22,7 @@ import FuelRecordFormModal from '../components/FuelRecordFormModal';
 import ExpenseFormModal from '../components/ExpenseFormModal';
 import ConfirmModal from '../components/ConfirmModal';
 import Toast from '../components/Toast';
+import PageBackground from '../components/PageBackground';
 
 export default function FuelExpensesPage() {
   const { user } = useAuth();
@@ -357,7 +358,8 @@ export default function FuelExpensesPage() {
   if (!canView) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'left' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'left', position: 'relative' }}>
+      <PageBackground variant="fuel-expenses" />
       
       {/* Toast Notice */}
       <Toast 
@@ -434,15 +436,33 @@ export default function FuelExpensesPage() {
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
-        gap: '16px'
+        gap: '16px',
+        position: 'relative',
+        zIndex: 1
       }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Fuel & Expenses
-          </h1>
-          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-            Track fleet fuel consumption and operational spending.
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            borderRadius: '14px',
+            backgroundColor: 'var(--color-mint-glow)',
+            color: 'var(--color-mint-dark)',
+            boxShadow: '0 8px 20px rgba(16, 185, 129, 0.08)',
+            flexShrink: 0
+          }}>
+            <DollarSign size={22} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+              Fuel & Expenses
+            </h1>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+              Track fleet fuel consumption and operational spending.
+            </p>
+          </div>
         </div>
 
         {canManage && (
