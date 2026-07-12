@@ -6,6 +6,7 @@ import FleetPage from './pages/FleetPage';
 import DriversPage from './pages/DriversPage';
 import TripsPage from './pages/TripsPage';
 import MaintenancePage from './pages/MaintenancePage';
+import FuelExpensesPage from './pages/FuelExpensesPage';
 import AppShell from './components/AppShell';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
@@ -63,6 +64,16 @@ export default function App() {
               <ProtectedRoute>
                 <AppShell>
                   <MaintenancePage />
+                </AppShell>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/fuel-expenses" 
+            element={
+              <ProtectedRoute>
+                <AppShell>
+                  <FuelExpensesPage />
                 </AppShell>
               </ProtectedRoute>
             } 
